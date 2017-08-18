@@ -1,0 +1,13 @@
+###########Scala ignore
+.classpath
+.project
+target/
+project/
+bin/
+.settings/
+.idea/
+*.iml
+*.class
+*.log
+
+
