@@ -49,4 +49,3 @@ object FileMatcher {
   def filesRegex(query: String) =
     filesMatching(_.matches(query))
 }
-
