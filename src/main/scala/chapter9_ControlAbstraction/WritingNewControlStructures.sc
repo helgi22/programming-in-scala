@@ -1,5 +1,6 @@
-
 def twice(op: Double => Double, x: Double) = op(op(x))
+twice((x) => x + 3, 5)
+//or
 twice(_ + 3, 5) //5 + 3 + 3 =11.0
 
 //Рассмотрим теперь более широко используемую схему кодирования: откройте ресурс,
@@ -57,12 +58,11 @@ def withPritWriten1(file: java.io.File)(op: PrintWriter => Unit) = {
   }
 }
 
-//usage
+//so, You can usage
 val file = new File("date.txt")
 withPritWriten1(file) {
   writer => writer.println(new java.util.Date())
 }
-
 //In this example, the first argument list, which contains one File argument, is written surrounded by
 //parentheses. The second argument list, which contains one function argument, is surrounded by curly
 //braces.
