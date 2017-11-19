@@ -1,9 +1,9 @@
 abstract class Element {
   def contents: Array[String]
 
-  val height: Int = contents.length
+  def height: Int = contents.length
 
-  val width: Int = if (height == 0) 0 else contents(0).length
+  def width: Int = if (height == 0) 0 else contents(0).length
 }
 
 
@@ -18,7 +18,9 @@ println() // better to not drop the ()
 
 
 class ElementArray(conts: Array[String]) extends Element {
-  def contents: Array[String] = conts
+  //You could change the implementation of contents in class ArrayElement from a method
+  //to a field without having to modify the abstract method definition of contents in class Element
+  val contents: Array[String] = conts
 }
 
 val ae: Element = new ElementArray(Array("test-0", "test-1", ""))
@@ -35,7 +37,7 @@ ae.contents(1)
 //Second, a member of a superclass is not inherited if a member with the same name and parameters
 //is already implemented in the subclass. In that case we say the member of the subclass overrides
 //the member of the superclass. If the member in the subclass is concrete and the member
-//of the superclass is abstract, we also say that the concrete memberimplements the abstract one.
+//of the superclass is abstract, we also say that the concrete member implements the abstract one.
 
 
 //Generally, Scala has just two namespaces for definitions in place of Java's four.
@@ -68,5 +70,16 @@ class Tiger(
              private var age: Int
            ) extends Cat
 
-val tgr = new Tiger(true,1)
+val tgr = new Tiger(true, 1)
 tgr.dangerous
+
+//tgr.age  - not accessible because it is private
+
+
+// INVOKING SUPERCLASS CONSTRUCTORS
+class LineElement(s: String) extends ArrayElement(Array(s)) {
+  override def width: Int = s.length
+
+  override def height: Int = 1
+}
+
