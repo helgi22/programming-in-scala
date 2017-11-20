@@ -7,7 +7,7 @@ represented more compactly in its "normalized" form as 1/5. You divide by swappi
 and denominator of the right operand and then multiplying. For instance 1/2 / 3/5 is the same
 as 1/2 * 5/3, or 5/6. */
 
-class Rational(n: Int, d: Int) {
+class Rational(n: Int, d: Int) extends Ordered[Rational] {
   require(d != 0, "denominator should not be equals zero")
   private val g: Int = gcd(n.abs, d.abs)
   //To get this to compile, you would need to insert an extra space before the colon, as in:
@@ -17,6 +17,9 @@ class Rational(n: Int, d: Int) {
   def this(n: Int) = this(n, 1) //Auxiliary constructor
 
   //  printf("Created %s/%s\n", n, d)
+
+  override def compare(that: Rational): Int =
+    (this.numer_ * that.denom) - (that.numer_ * this.denom)
 
   def +(that: Rational): Rational = add(that)
 
@@ -79,3 +82,6 @@ val implicitNum = 2 * gcdNum
 oneHalf.lessThen(twoThirds)
 
 oneHalf max wholeNum
+
+oneHalf > twoThirds
+oneHalf < twoThirds
