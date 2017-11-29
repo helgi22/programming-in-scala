@@ -1,18 +1,38 @@
+abstract class Expr
+
+case class Var(name: String) extends Expr
+
+case class Number(num: Double) extends Expr
+
+case class BinOp(operator: String, left: Expr, right: Expr) extends Expr
+
 /** Pattern matching */
-/** Wildcard patterns
-  * The wildcard pattern (_) matches any object whatsoever. You have already seen it used as a default,
-  * catch-all alternative, like this: */
+
+/** Wildcard patterns and Constructor patterns
+  * Constructors are where pattern matching becomes really powerful.
+  * A constructor pattern looks like "BinOp("+", e, Number(0))". It consists of
+  * a name (BinOp) and then a number of patterns within parentheses: "+", e, and
+  * Number(0). Assuming the name designates a case class, such a pattern means
+  * to first check that the object is a member of the named case class, and then
+  * to check that the constructor parameters of the object match the extra patterns supplied.
+  * These extra patterns mean that Scala patterns support deep matches
+  *
+  * The wildcard pattern (_) matches any object whatsoever. You have already seen it used as
+  * a default, catch-all alternative, like this: */
 def d(expr: Any) = expr match {
-  case BinOp(op, left, right) =>
-    println(expr + " is a binary operation")
-  case _ => // handle the default case
+  case BinOp("op", Var("qqq"), Number(100)) => println(expr + " is the Constructor patterns")
+  case _ => println("he wildcard pattern ") // handle the default case
 }
+d("test")
+d(BinOp("Str", Var("var"), Number(2)))
+d(BinOp("op", Var("qqq"), Number(100)))
 
 /** Wildcards can also be used to ignore parts of an object that you do not care about. */
 def dd(expr: Any) = expr match {
   case BinOp(_, _, _) => println(expr + " is a binary operation")
   case _ => println("It's something else")
 }
+dd(BinOp("Str", Var("var"), Number(2)))
 
 /** Constant patterns */
 /** A constant pattern matches only itself. Any literal may be used as a constant.
@@ -29,10 +49,12 @@ def describe(x: Any) = x match {
 }
 
 /** Variable patterns */
-expr match {
+val variable = (expr: Int) => expr match {
   case 0 => "zero"
   case somethingElse => "not zero: " + somethingElse
 }
+variable(0)
+variable(2)
 
 /** Variable or constant? */
 
@@ -53,8 +75,9 @@ E match {
   * alias for pi and try with that:
   */
 val pi = math.Pi
+
 //pi: Double = 3.141592653589793
-E match {
+pi match {
   case pi => "strange math? Pi = " + pi
 }
 //res12: String = strange math ? Pi = 2.718281828459045
@@ -80,8 +103,79 @@ E match {
   * name in back ticks. For instance, `pi` would again be interpreted as a constant,
   * not as a variable:
   */
-E match {
-  case `pi` => "strange math? Pi = " + pi
+Pi match {
+  case `pi` => "truth math? Pi = " + pi
   case _ => "OK"
 }
 //res14: String = OK
+
+/** Sequence patterns
+  * Listing below shows a pattern that checks for a three-element list starting with zero. */
+val seqval = (x: List[Int]) => x match {
+  case List(0, _, _) => println("matching this list " + x)
+  case _ => println(" " + x)
+}
+seqval(List(0, 2, 90))
+seqval(List(1, 2, 90))
+
+/** If you want to match against a sequence without specifying how long it can be,
+  * you can specify _* as the last element of the pattern. */
+
+val seqvalunzise = (x: List[Int]) => x match {
+  case List(0, _*) => println("matching this list " + x)
+  case _ => println("Wildcard matching" + x)
+}
+seqvalunzise(List())
+seqvalunzise(List(0, 2, 4, 5, 6, 7, 8, 9))
+
+/** Tuple patterns */
+def tupleDemo(expr: Any) =
+  expr match {
+    case (a, b, c) => println("matched " + a + b + c)
+    //    case (_*)  => println("matched others tuple" )
+    case _ => println("Default matching" + expr)
+  }
+
+tupleDemo(("a ", 3, "-tuple"))
+tupleDemo(("a", 3))
+tupleDemo((1, 3, 6, 8, 0, 9))
+
+/** Typed patterns
+  * You can use a typed pattern as a convenient replacement for type tests and type casts.
+  * Listing shows an example. */
+
+def generalSize(x: Any) = x match {
+  case s: String => s.length
+  //  case l: Map[Int,Int] => println("Map[Int,Int] "+l.size)
+  /**
+    * warning: non-variable type argument Int in type  pattern
+    * scala.collection.immutable.Map[Int,Int] (the underlying of Map[Int,Int])
+    * Scala uses the erasure model of generics, just like Java does. This means that no
+    * information about type arguments is maintained at runtime
+    */
+  case m: Map[_, _] => m.size
+  case _ => -1
+}
+/*like this*/
+val s: String = ""
+if (s.isInstanceOf[String]) {
+  val ss = s.asInstanceOf[String]
+  ss.length
+} else ???
+
+generalSize("abc")
+generalSize(Map(1 -> 'a', 2 -> 'b'))
+generalSize(Map('1' -> 'a', '2' -> 'b'))
+generalSize(math.Pi)
+
+/** The only exception to the erasure rule is arrays, because they are handled specially
+  * in Java as well as in Scala. The element type of an array is stored with the array
+  * value, so you can pattern match on it. */
+def isStringArray(x: Any) = x match {
+  case a: Array[String] => "yes"
+  case _ => "no"
+}
+
+isStringArray(Array(1,2,3))
+isStringArray(Array("1","2","3"))
+
