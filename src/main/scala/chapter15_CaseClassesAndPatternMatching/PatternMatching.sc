@@ -4,6 +4,8 @@ case class Var(name: String) extends Expr
 
 case class Number(num: Double) extends Expr
 
+case class UnOp(operator: String, arg: Expr) extends Expr
+
 case class BinOp(operator: String, left: Expr, right: Expr) extends Expr
 
 /** Pattern matching */
@@ -49,12 +51,13 @@ def describe(x: Any) = x match {
 }
 
 /** Variable patterns */
-val variable = (expr: Int) => expr match {
+val variable = (expr: AnyVal) => expr match {
   case 0 => "zero"
   case somethingElse => "not zero: " + somethingElse
 }
 variable(0)
 variable(2)
+variable("two")
 
 /** Variable or constant? */
 
@@ -176,6 +179,55 @@ def isStringArray(x: Any) = x match {
   case _ => "no"
 }
 
-isStringArray(Array(1,2,3))
-isStringArray(Array("1","2","3"))
+isStringArray(Array(1, 2, 3))
+isStringArray(Array("1", "2", "3"))
 
+/** Variable binding
+  * In addition to the standalone variable patterns, you can also add a variable to any other pattern. You
+  * simply write the variable name, an at sign (@), and then the pattern. This gives you a variable-binding
+  * pattern, which means the pattern is to perform the pattern match as normal, and if the pattern succeeds,
+  * set the variable to the matched object just as with a simple variable pattern. */
+val expr = (expr: Expr) => expr match {
+  case UnOp("abs", e @ UnOp("abs", _)) => println(e)
+  case _ => println("Default matching")
+}
+
+expr(UnOp("abs", UnOp("abs", Var(""))))
+expr(UnOp("abs", Var("")))
+
+/**PATTERN GUARDS
+  * A pattern guard comes after a pattern and starts with an if. The guard can be an arbitrary boolean
+  * expression, which typically refers to variables in the pattern. If a pattern guard is present, the match
+  * succeeds only if the guard evaluates to true. */
+def simplifyAdd(e: Expr) = e match {
+  case BinOp("+", x, y) if x == y => BinOp("*", x, Number(2))
+  case _ => e
+}
+
+// match only positive integers
+//case n: Int if 0 < n => ???
+// match only strings starting with the letter `a'
+//case s: String if s(0) == 'a' => ???
+
+/**PATTERN OVERLAPS*/
+
+def simplifyAll(expr: Expr): Expr = expr match {
+  case UnOp("-", UnOp("-", e)) => simplifyAll(e) // `-' is its own inverse
+  case BinOp("+", e, Number(0)) => simplifyAll(e) // `0' is a neutral element for `+'
+  case BinOp("*", e, Number(1)) => simplifyAll(e) // `1' is a neutral element for `*'
+  case UnOp(op, e) => UnOp(op, simplifyAll(e))
+  case BinOp(op, l, r) => BinOp(op, simplifyAll(l), simplifyAll(r))
+  case _ => expr
+}
+
+/** In this example, it is important that the catch-all cases come after the more specific simplification rules.
+  * If you wrote them in the other order, then the catch-all case would be run in favor of the more specific
+  *rules. In many cases, the compiler will even complain if you try. For example, here's
+  * a match expression that won't compile because the first case will match anything that would be
+  * matched by the second case: */
+def simplifyBad(expr: Expr): Expr = expr match {
+  case UnOp(op, e) => UnOp(op, simplifyBad(e))
+  case UnOp("-", UnOp("-", e)) => e
+}
+//warning: unreachable code
+//case UnOp("-", UnOp("-", e)) => e
